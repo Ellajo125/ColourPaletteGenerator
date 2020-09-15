@@ -17,7 +17,7 @@ class UploadedImage:
 
         " Setting up a matrix to store the rgb values"
         num_pix = self.image.size[0]*self.image.size[1]
-        px = np.zeros((num_pix-1, 2)) #This is currently only set up for rgb.
+        px = np.zeros((num_pix, 3)) #This is currently only set up for rgb.
 
         for band in range(0, 2):
             px[:, band] = list(self.image.getdata(band))

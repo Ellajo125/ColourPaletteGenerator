@@ -25,17 +25,18 @@ def remove_k_value(k_num, k, row_index):
 def data_to_k_(k_num, k, data):
     """Calculating the distance to each data point and assigning it to a k value"""
     row_index, col_index = data.shape
-    data_dis = np.zeros((row_index-1, k_num-1))
+    data_dis = np.zeros((row_index, k_num))
 
     "Calculating the distance to each node"
     for k_index in range(0, k_num-1):
 
-        data_dis[:, k_index] = (np.sum(((data-k())**2), axis=1))**(1/2)
+        data_dis[:, k_index] = (np.sum(((data-k[k_index,:])**2), axis=1))**(1/2)
 
     """Determine which node is to each data point"""
-    assigned_k = data_dis == data_dis.min(axis=1)
+    assigned_k = data_dis == data_dis.min(axis=1)[np.newaxis].T
 
-    return assigned_k
+
+    return assigned_k , data_dis
 
 
 def k_mod(k_num, k, assigned_k, data):
@@ -43,14 +44,16 @@ def k_mod(k_num, k, assigned_k, data):
     k_old = k
 
     for k_index in range(0, k_num-1):
-        num_data_points = assigned_k[:, k_index]
+        num_data_points = sum(assigned_k[:, k_index])
 
         try:
-            k[k_index, :] = np.sum(data * assigned_k[:, k_index]) / num_data_points
+            k_temp = assigned_k[:, k_index]
+            k[k_index, :] = sum(data * k_temp[np.newaxis].T) / num_data_points
         except ZeroDivisionError:
+
             k_num, k = remove_k_value(k_num, k, k_index)
 
-    err = (((k-k_old)/2)**2)**(1/2)
+    err = sum(sum(((k-k_old)/2)**2)**(1/2))
 
     return k, err, k_num
 
@@ -63,13 +66,15 @@ def run_kmeans(k_num, data, itter=100, tol=1*10^(-4)):
     err = 1
     err_list = []
 
-    while j < itter or err < tol:
-        assigned_k = data_to_k_(k_num, k ,data)
+    while (j <= itter) and (err >= tol):
+        assigned_k, data_dis = data_to_k_(k_num, k ,data)
         k, err, k_num = k_mod(k_num, k, assigned_k, data)
         err_list.append(err)
         j += 1
+
     if k_num_int == k_num:
         same_k = True
     else:
         same_k = False
     return k, err_list, same_k
+
