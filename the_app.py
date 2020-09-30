@@ -9,6 +9,7 @@ from kivy.properties import  ObjectProperty, StringProperty
 import os
 from kmeans import run_kmeans
 
+
 from upload_image import UploadedImage
 
 
@@ -20,7 +21,7 @@ class NewImageDialog(FloatLayout):
 class Root(FloatLayout):
     cancel = ObjectProperty(None)
     current_image = ObjectProperty(None)
-    img_path = ObjectProperty(None)
+    img_path = StringProperty(None)
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -31,15 +32,16 @@ class Root(FloatLayout):
         self._popup.open()
 
     def load(self, path, filename):
-        img_path = filename[0]
+        img_path = os.path.join(path, filename[0])
         self.current_image = UploadedImage(img_path)
+        self.current_image.source = img_path
         self.dismiss_popup()
 
     def calculate(self):
         """To map the k-means algorithm to the calculate button"""
+
         self.current_image.px = self.current_image.img_pixels()
-        print(self.current_image.px)
-        k, err_list, same_k= run_kmeans(3, self.current_image.px)
+        k, err_list, same_k = run_kmeans(3, self.current_image.px)
 
 class ImageSpot(Widget):
     """Widget to define the spot the holds the images on the app."""
