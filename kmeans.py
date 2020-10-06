@@ -65,24 +65,36 @@ def k_mod(k_num, assigned_k, data):
 
 def find_silCoe(k_num, assigned_k, k, data):
     """Determine the Silhouette Coefficiect for the number of k-values """
-    invert_assigned_k = np.zeros(assigned_k.shape)
-    data_dis = data_distance(k_num,k, data)
-    x = assigned_k*data_dis
-    x = x.max(1)
+    a = 0
+    b = 0
+    a_count =0
+    mini_batch = int(data.shape[0]/10)
+    mini_batch_rows = np.random.choice(data.shape[0], size = mini_batch, replace = False)
+    data_mini_b = data[mini_batch_rows,:]
+    assigned_k_mini = assigned_k[mini_batch_rows,:]
 
-    "Using the inverted logical boolean of assigned_k to remove the max value"
-    invert_assigned_k = invert_assigned_k == assigned_k
 
-    "Removing the assigned k-value from the equation "
-    data_dis_2 = ((data_dis+1) * invert_assigned_k)-1
-    data_dis_2_invert = 1/data_dis_2
-    y = 1 / np.max(data_dis_2_invert,1)
-    print(min(y))
-    print(' ')
-    print(np.average(y))
-    print(np.average(x))
-    print(' ')
-    silCoe = (np.average(y)-np.average(x))/max(np.average(y),np.average(x))
+    for k_index in range(0,k_num):
+        k_temp = k[k_index,:]
+        assigned_k_mini_temp = assigned_k_mini[:, k_index]
+        data_in_k = data_mini_b*assigned_k_mini_temp[np.newaxis].T
+        data_in_k = np.delete(data_in_k, np.where(~data_in_k.any(axis=1))[0], axis=0)
+
+        "Finding the a value; the intra cluster distance"
+        for data_index in range(0, data_in_k.shape[0]):
+            inside = (data_in_k - data_in_k[data_index,:])**2
+            point_dist = (inside.sum(1)**(1/2))
+            a += np.sum(point_dist)
+            a_count += data_in_k.shape[0]-1
+
+        "Finding the b values"
+        inside_square_k = (k - k_temp[np.newaxis])**2
+        b += np.sum((inside_square_k.sum(0))**(1/2))
+
+    a = a / a_count
+    b = b/(k_num*(k_num-1))
+
+    silCoe = (b-a)/max(a,b)
 
     return silCoe
 
@@ -98,9 +110,10 @@ def single_kmeans(k_num, data, itter):
         j += 1
 
     silCoe = find_silCoe(k_num, assigned_k, k, data)
+
     return k, silCoe
 
-def run_kmeans(data, max_knum=4, redo=5, itter=100):
+def run_kmeans(data, max_knum=7, redo=5, itter=25):
     """Function to run the single kmeans algorithm """
 
     silCoe = -1  # Coefficent to track the Silohouette Coeffiecent
@@ -110,7 +123,6 @@ def run_kmeans(data, max_knum=4, redo=5, itter=100):
 
         while j < redo:
             k_new, silCoe_new = single_kmeans(k_num, data, itter)
-            print(silCoe_new)
             if silCoe_new > silCoe:
                 k = k_new
                 silCoe = silCoe_new
@@ -120,7 +132,7 @@ def run_kmeans(data, max_knum=4, redo=5, itter=100):
 
 
 if __name__ == '__main__':
-    image1 = UploadedImage('test2.png')
+    image1 = UploadedImage('test13.png')
     px_1 = image1.img_pixels()
     k, silCoe = run_kmeans(px_1)
 

@@ -41,7 +41,10 @@ class Root(FloatLayout):
         """To map the k-means algorithm to the calculate button"""
 
         self.current_image.px = self.current_image.img_pixels()
-        k, err_list, same_k = run_kmeans(3, self.current_image.px)
+        k, silcoe = run_kmeans(self.current_image.px)
+        print(k)
+        print(" ")
+        print(silcoe)
 
 class ImageSpot(Widget):
     """Widget to define the spot the holds the images on the app."""
